@@ -1,90 +1,80 @@
 {
-  "_comment": "Reproducer for TKA-10324 — Gradle 9 toolchain-only Java config fails dependency resolution.",
+  "_comment": "Autotest config for gradle9-toolchain-only. TKA-10324 root cause was a broken Java toolchain pin (17.0.11+9.0.LTS → 404 on api.adoptium.net). .whitesource now pins java=17.0.19+10 and gradle=9.0.0, so the scanner SHOULD resolve all 5 direct deps and 9 transitives.",
   "_tka": "https://mend-io.atlassian.net/browse/TKA-10324",
-  "_expected_behaviour": "Scanner SHOULD resolve all 5 direct deps (slf4j-api, guava, jackson-databind, commons-lang3, logback-classic) and their transitives. Currently it returns 0 deps because the toolchain resolution fails inside whitesourceDependenciesTask.",
   "description": "Autotest configuration file for dependency tree detection validation",
-  "version": 1.5,
+  "version": 1.7,
   "base_config": {
     "validate_scan_output": true,
     "scan_output": {
-      "_comment_security_scan_report_conclusion": "BUG ACTIVE (TKA-10324): scanner returns 0 deps → no vulns → 'success' conclusion. Update to 'failure' once real deps are detected.",
       "security_scan_report_conclusion": "success",
       "total_libs_scanned": {
-        "eq": 0
+        "gte": 11
       },
       "expected_messages": []
     },
     "validate_dependency_tree": true,
     "dependency_tree": {
       "check_dependency_tree_detection_status": true,
-      "_comment_expected_dependencies": "BUG ACTIVE (TKA-10324): scanner returns 0 deps due to toolchain resolution failure. Set to 0 while tracking the ticket. Update to real counts (gte: 5 direct, gte: 20 total) once the fix is delivered.",
+      "check_update_request_sca_results": true,
       "expected_total_dependencies_number": {
-        "eq": 0
+        "gte": 11
       },
       "expected_direct_dependencies_number": {
-        "eq": 0
+        "eq": 5
       },
-      "_comment_fix_target": "Once TKA-10324 is fixed: total gte 20, direct gte 5. Direct deps: slf4j-api, guava, jackson-databind, commons-lang3, logback-classic.",
-      "validate_agent_versions": false
+      "expected_transitive_dependencies_number": {
+        "gte": 6
+      },
+      "direct_dependencies_names_list": {
+        "eq": [
+          "slf4j-api",
+          "guava",
+          "jackson-databind",
+          "commons-lang3",
+          "logback-classic"
+        ]
+      },
+      "transitive_dependencies_names_list": {
+        "contains": [
+          "failureaccess",
+          "listenablefuture",
+          "jsr305",
+          "checker-qual",
+          "error_prone_annotations",
+          "j2objc-annotations",
+          "jackson-annotations",
+          "jackson-core",
+          "logback-core"
+        ]
+      },
+      "expected_package_managers": {
+        "contains": [
+          "gradle"
+        ]
+      },
+      "validate_agent_versions": false,
+      "expected_agent_version": "",
+      "expected_plugin_version": "",
+      "validate_mend_tags": false
     },
     "validate_vulnerabilities_table": false,
     "vulnerabilities_table": {
-      "check_vulnerabilities_table_structure": true
+      "check_vulnerabilities_table_structure": true,
+      "expected_total_vulnerabilities_number": {
+        "gte": 0
+      },
+      "vulnerabilities_ids_list": {
+        "contains": []
+      },
+      "vulnerabilities_names_list": {
+        "contains": []
+      }
     },
-    "validate_scanner_logs": true,
-    "_comment_logs": "Validate that the known GHE error message appears in scanner logs while the bug is open.",
+    "validate_scanner_logs": false,
     "logs": {
       "check_scanner_logs": true,
-      "expected_log_lines": [
-        {
-          "operator": "regex",
-          "value": "Cannot find a Java installation.*matching.*languageVersion=17"
-        }
-      ]
-    },
-    "validate_reachability": false,
-    "reachability": {
-      "check_reachability_status": false
-    }
-  },
-  "ghc_dev": {
-    "_comment": "GHC-specific override for TKA-10324 reproduction on ghc_dev.",
-    "_ghc_note": "GHC provisions Java via scanSettings.versioning.java=17. The toolchain-only build.gradle STILL invokes the Gradle Toolchain API internally — which may or may not find the provisioned JDK depending on how GHC exposes it to the Gradle daemon. Two possible outcomes on first run: (A) Same failure as GHE → 0 deps + toolchain error in logs. (B) GHC resolves successfully → deps detected. Update this block based on actual scan result.",
-    "validate_scan_output": true,
-    "scan_output": {
-      "_comment_security_scan_report_conclusion": "Conservative: expecting 0 deps → no vulns → 'success'. Update once actual scan result is known.",
-      "security_scan_report_conclusion": "success",
-      "total_libs_scanned": {
-        "eq": 0
-      },
-      "expected_messages": []
-    },
-    "validate_dependency_tree": true,
-    "dependency_tree": {
-      "check_dependency_tree_detection_status": true,
-      "_comment_expected_dependencies": "Conservative while bug is open on GHC. If GHC resolves successfully, update to: total gte 20, direct gte 5.",
-      "expected_total_dependencies_number": {
-        "eq": 0
-      },
-      "expected_direct_dependencies_number": {
-        "eq": 0
-      },
-      "validate_agent_versions": false
-    },
-    "validate_vulnerabilities_table": false,
-    "vulnerabilities_table": {
-      "check_vulnerabilities_table_structure": true
-    },
-    "validate_scanner_logs": true,
-    "_comment_logs_ghc": "GHC scanner log format may differ from GHE. Using a broader regex that matches both. If GHC resolves successfully (outcome B), disable this log check.",
-    "logs": {
-      "check_scanner_logs": true,
-      "expected_log_lines": [
-        {
-          "operator": "regex",
-          "value": "Cannot find a Java installation.*matching.*languageVersion=17"
-        }
-      ]
+      "detect_secrets": false,
+      "expected_log_lines": []
     },
     "validate_reachability": false,
     "reachability": {
