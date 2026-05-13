@@ -5,9 +5,8 @@
     "projectToken": "",
     "baseBranches": [],
     "versioning": {
-      "java": "17.0.19+10",
-      "gradle": "9.0.0"
-    }
+      "java": "17.0.19+10"
+}
   },
   "checkRunSettings": {
     "vulnerableCheckRunConclusionLevel": "failure",
