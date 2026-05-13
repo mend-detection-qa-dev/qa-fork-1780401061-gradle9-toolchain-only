@@ -1,0 +1,48 @@
+// Reproducer for TKA-10324
+// ============================================================
+// KEY: Only 'java { toolchain { languageVersion = ... } }' is
+// set — NO sourceCompatibility / targetCompatibility.
+//
+// This forces Gradle to locate/download a JDK 17 via the
+// toolchain API. When no matching JDK is present (and no
+// toolchain download repository is configured), the scanner's
+// whitesourceDependenciesTask fails with:
+//
+//   > Failed to calculate the value of task ':compileJava'
+//     property 'javaCompiler'.
+//   > Cannot find a Java installation on your machine matching:
+//     {languageVersion=17, vendor=any vendor, ...}
+//     Toolchain download repositories have not been configured.
+// ============================================================
+
+plugins {
+    id 'java'
+}
+
+group = 'com.example'
+version = '1.0.0'
+
+// *** CRITICAL: toolchain-only — no sourceCompatibility / targetCompatibility ***
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+dependencies {
+    // A handful of well-known dependencies to make the detection meaningful
+    // when/if the issue is fixed.
+    implementation 'org.slf4j:slf4j-api:2.0.13'
+    implementation 'com.google.guava:guava:33.2.1-jre'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
+    implementation 'org.apache.commons:commons-lang3:3.14.0'
+
+    runtimeOnly 'ch.qos.logback:logback-classic:1.5.6'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.3'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
